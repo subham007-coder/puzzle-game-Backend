@@ -4,6 +4,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const songRoutes = require("./routes/songs");
 require("dotenv").config();
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 
@@ -13,6 +15,17 @@ app.use(cors());
 app.use("/uploads", express.static("uploads")); // Serve uploaded files
 app.use("/api/songs", songRoutes);
 
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+const imagesDir = path.join(uploadsDir, 'images');
+
+// Create directories recursively
+[uploadsDir, imagesDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`Created directory: ${dir}`);
+  }
+});
 
 // Routes
 app.use('/api', songRoutes); // This prefix is important!
