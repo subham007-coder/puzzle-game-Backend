@@ -13,9 +13,9 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors({
   origin: ['http://localhost:5173', 'https://f-end-puzzle-game-admin-panel.vercel.app'],
-  origin: ['*'],
   methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
  }));
 app.use("/uploads", express.static("uploads")); // Serve uploaded files
 app.use("/api/songs", songRoutes);
