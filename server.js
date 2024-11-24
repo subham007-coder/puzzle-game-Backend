@@ -22,9 +22,10 @@ app.use("/api/songs", songRoutes);
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
 const imagesDir = path.join(uploadsDir, 'images');
+const audioDir = path.join(uploadsDir, 'audio');
 
 // Create directories recursively
-[uploadsDir, imagesDir].forEach(dir => {
+[uploadsDir, imagesDir, audioDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
     console.log(`Created directory: ${dir}`);
