@@ -1,55 +1,72 @@
 const express = require("express");
 const multer = require("multer");
 const Song = require("../models/Song");
-const mongoose = require('mongoose'); // Add this import
+const mongoose = require('mongoose');
 const { uploadCloud } = require('../config/cloudinary');
 
 const router = express.Router();
 
-// Configure Multer
-const storage = multer.diskStorage({
+// Configure Multer for audio files only
+const audioStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
-      cb(null, "uploads/images");
-    } else if (file.mimetype.startsWith("audio/")) {
-      cb(null, "uploads/audio");
-    } else {
-      cb(new Error("Invalid file type"), false);
-    }
+    cb(null, "uploads/audio");
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
 
-const upload = multer({ storage });
+const audioUpload = multer({ storage: audioStorage });
 
-const uploadCloud = uploadCloud.fields([
-  { name: 'image', maxCount: 1 },
-  { name: 'audio', maxCount: 1 }
-]);
+// Combined upload middleware
+const upload = {
+  fields: [
+    { name: 'image', maxCount: 1 },
+    { name: 'audio', maxCount: 1 }
+  ]
+};
 
 // Add new song route
-router.post("/add", uploadCloud, async (req, res) => {
-  try {
-    const { title, album } = req.body;
+router.post("/add", 
+  (req, res, next) => {
+    uploadCloud.single('image')(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ error: "Image upload failed" });
+      }
+      next();
+    });
+  },
+  audioUpload.single('audio'),
+  async (req, res) => {
+    try {
+      const { title, album } = req.body;
 
-    if (!title) {
-      return res.status(400).json({ error: "Title are required" });
+      if (!title) {
+        return res.status(400).json({ error: "Title is required" });
+      }
+
+      // Get Cloudinary URL for image
+      const image = req.file?.path; // Cloudinary URL
+      const audio = req.file?.path; // Local audio path
+
+      const newSong = new Song({ 
+        title, 
+        album, 
+        image: image || null, 
+        audio: audio || null 
+      });
+      await newSong.save();
+
+      res.status(201).json({ 
+        message: "Song added successfully!", 
+        song: newSong 
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Server error. Try again later." });
     }
-
-    const imageUrl = req.files.image[0].path;
-    const audioPath = req.files.audio[0].path; // This will still be local storage
-
-    const newSong = new Song({ title, album, imageUrl, audioPath });
-    await newSong.save();
-
-    res.status(201).json({ message: "Song added successfully!", song: newSong });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error. Try again later." });
   }
-});
+);
 
 // DELETE route to remove a song
 router.delete('/songs/:id', async (req, res) => {
