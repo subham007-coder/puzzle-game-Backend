@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const Song = require("../models/Song");
 const mongoose = require('mongoose'); // Add this import
+const { uploadCloud } = require('../config/cloudinary');
 
 const router = express.Router();
 
@@ -23,8 +24,13 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+const uploadCloud = uploadCloud.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'audio', maxCount: 1 }
+]);
+
 // Add new song route
-router.post("/add", upload.fields([{ name: "image" }, { name: "audio" }]), async (req, res) => {
+router.post("/add", uploadCloud, async (req, res) => {
   try {
     const { title, album } = req.body;
 
@@ -32,10 +38,10 @@ router.post("/add", upload.fields([{ name: "image" }, { name: "audio" }]), async
       return res.status(400).json({ error: "Title are required" });
     }
 
-    const image = req.files?.image ? req.files.image[0].path : null;
-    const audio = req.files?.audio ? req.files.audio[0].path : null;
+    const imageUrl = req.files.image[0].path;
+    const audioPath = req.files.audio[0].path; // This will still be local storage
 
-    const newSong = new Song({ title, album, image, audio });
+    const newSong = new Song({ title, album, imageUrl, audioPath });
     await newSong.save();
 
     res.status(201).json({ message: "Song added successfully!", song: newSong });
