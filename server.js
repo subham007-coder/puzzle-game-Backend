@@ -3,16 +3,25 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const songRoutes = require("./routes/songs");
+const cloudinary = require('cloudinary').v2;
 require("dotenv").config();
 const fs = require('fs');
 const path = require('path');
 
 const app = express();
 
+
+// Configure Cloudinary with your credentials
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 // Middleware
 app.use(bodyParser.json());
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://f-end-puzzle-game-admin-panel.vercel.app'],
+  origin: ['http://localhost:5173',"http://localhost:5174", 'https://f-end-puzzle-game-admin-panel.vercel.app'],
   methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT', 'PATCH'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']
