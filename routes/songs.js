@@ -36,7 +36,7 @@ router.post('/add',
       const imageBase64 = `data:${req.files.image[0].mimetype};base64,${req.files.image[0].buffer.toString('base64')}`;
       const audioBase64 = `data:${req.files.audio[0].mimetype};base64,${req.files.audio[0].buffer.toString('base64')}`;
 
-      // Upload to cloudinary
+      // Upload to Cloudinary
       const imageResult = await cloudinary.uploader.upload(imageBase64, {
         folder: 'puzzle-game/images'
       });
@@ -45,10 +45,6 @@ router.post('/add',
         folder: 'puzzle-game/audio',
         resource_type: 'auto'
       });
-
-      // Log the Cloudinary results
-      console.log('Image upload result:', imageResult);
-      console.log('Audio upload result:', audioResult);
 
       const newSong = new Song({
         title: req.body.title,
@@ -60,10 +56,9 @@ router.post('/add',
       });
 
       const savedSong = await newSong.save();
-      console.log('Saved song:', savedSong);  // Log the saved song
       res.status(201).json(savedSong);
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('Upload error:', error); // Log the error
       res.status(500).json({ message: error.message });
     }
 });
