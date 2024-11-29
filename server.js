@@ -7,7 +7,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['*'],
+  origin: ['https://f-end-puzzle-game-admin-panel.vercel.app'],
   credentials: true
 }));
 app.use(express.json());
