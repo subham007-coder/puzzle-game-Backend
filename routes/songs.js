@@ -46,14 +46,21 @@ router.post('/add',
         resource_type: 'auto'
       });
 
+      // Log the Cloudinary results
+      console.log('Image upload result:', imageResult);
+      console.log('Audio upload result:', audioResult);
+
       const newSong = new Song({
         title: req.body.title,
         album: req.body.album,
         image: imageResult.secure_url,
-        audio: audioResult.secure_url
+        imagePublicId: imageResult.public_id,
+        audio: audioResult.secure_url,
+        audioPublicId: audioResult.public_id
       });
 
       const savedSong = await newSong.save();
+      console.log('Saved song:', savedSong);  // Log the saved song
       res.status(201).json(savedSong);
     } catch (error) {
       console.error('Upload error:', error);
@@ -61,7 +68,7 @@ router.post('/add',
     }
 });
 
-// Add DELETE route
+// Update the delete route
 router.delete('/:id', async (req, res) => {
   try {
     const song = await Song.findById(req.params.id);
@@ -70,28 +77,25 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Song not found' });
     }
 
-    // Extract public_id from Cloudinary URLs
-    const getPublicId = (url) => {
-      const parts = url.split('/');
-      const filename = parts[parts.length - 1];
-      return `puzzle-game/${filename.split('.')[0]}`;
-    };
-
-    // Delete image from Cloudinary
-    if (song.image) {
+    // Delete image from Cloudinary using stored public ID
+    if (song.imagePublicId) {
       try {
-        await cloudinary.uploader.destroy(getPublicId(song.image));
+        console.log('Deleting image with public_id:', song.imagePublicId);
+        const imageResult = await cloudinary.uploader.destroy(song.imagePublicId);
+        console.log('Image deletion result:', imageResult);
       } catch (error) {
         console.error('Error deleting image from Cloudinary:', error);
       }
     }
 
-    // Delete audio from Cloudinary
-    if (song.audio) {
+    // Delete audio from Cloudinary using stored public ID
+    if (song.audioPublicId) {
       try {
-        await cloudinary.uploader.destroy(getPublicId(song.audio), { 
-          resource_type: 'video' 
+        console.log('Deleting audio with public_id:', song.audioPublicId);
+        const audioResult = await cloudinary.uploader.destroy(song.audioPublicId, { 
+          resource_type: 'video'  // Important for audio files
         });
+        console.log('Audio deletion result:', audioResult);
       } catch (error) {
         console.error('Error deleting audio from Cloudinary:', error);
       }
